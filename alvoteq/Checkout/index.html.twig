@@ -43,11 +43,39 @@
     {% include 'FlexyFtwoStoreBundle:Include:alerts.html.twig' with {'alerts' : app.session.flashbag.get('store-checkout-error'),'error' : true} %}
     {% include 'FlexyFtwoStoreBundle:Include/Modal:add-address.html.twig' %}
     <section>
+        <div id="mensagem-erro"></div>
         <div class="second-page-container">
             <div class="container">
                 {% include 'FlexyFtwoStoreBundle:Include:breadcrumbs.html.twig' with {path : [{'title' : 'Checkout'}]} %}
                 <form action="{{ path("flexy_ftwo_store_checkout_finish") }}" method="post"
-                      enctype="multipart/form-data">
+                      enctype="multipart/form-data" id="payment-form">
+
+                    <input type="hidden" id="paymentGatewayId" name="paymentGatewayId" value="0">
+                    <input type="hidden" id="paymentId" name="paymentId" value="">
+                    <input type="hidden" id="orderNumber" name="orderNumber" value="">
+                    <input type="hidden" id="ccnum" name="ccnum">
+                    <input type="hidden" id="code3DS" name="antifraudeChallenge[code3DS]" value="">
+                    <input type="hidden" id="fingerprintSessionId" name="antifraudeChallenge[fingerprintSessionId]" value="">
+                    <input type="hidden" id="ipAddress" name="antifraudeChallenge[ipAddress]">
+                    <input type="hidden" id="userAgentBrowserValue" name="antifraudeChallenge[userAgentBrowserValue]">
+                    <input type="hidden" id="cardToken" name="antifraudeChallenge[cardToken]">
+                    <input type="hidden" id="jwt" name="antifraudeChallenge[jwt]">
+                    <input type="hidden" id="httpBrowserColorDepth" name="antifraudeChallenge[httpBrowserColorDepth]">
+                    <input type="hidden" id="httpBrowserJavaEnabled" name="antifraudeChallenge[httpBrowserJavaEnabled]">
+                    <input type="hidden" id="httpBrowserJavaScriptEnabled" name="antifraudeChallenge[httpBrowserJavaScriptEnabled]">
+                    <input type="hidden" id="httpBrowserLanguage" name="antifraudeChallenge[httpBrowserLanguage]">
+                    <input type="hidden" id="httpBrowserScreenHeight" name="antifraudeChallenge[httpBrowserScreenHeight]">
+                    <input type="hidden" id="httpBrowserScreenWidth" name="antifraudeChallenge[httpBrowserScreenWidth]">
+                    <input type="hidden" id="httpBrowserTimeDifference" name="antifraudeChallenge[httpBrowserTimeDifference]">
+                    <input type="hidden" id="httpAcceptContent" name="antifraudeChallenge[httpAcceptContent]">
+                    <input type="hidden" id="userAgent" name="antifraudeChallenge[userAgent]">
+                    <input type="hidden" id="referer" name="antifraudeChallenge[referer]">
+                    <input type="hidden" id="latitude" name="antifraudeChallenge[latitude]">
+                    <input type="hidden" id="longitude" name="antifraudeChallenge[longitude]">
+                    <input type="hidden" id="accuracy" name="antifraudeChallenge[accuracy]">
+                    <input type="hidden" id="timestamp" name="antifraudeChallenge[timestamp]">
+                    <input type="hidden" id="channel" name="antifraudeChallenge[channel]">
+
                     {% if store.googleReCaptcha.isActive %}
                         {{ store.googleReCaptcha.tokenV3|raw }}
                     {% endif %}
@@ -70,6 +98,7 @@
                                 <div class="row address-box">
                                     <div class="col-md-12">
                                         <h3><i class="fa fa-truck"></i> Endereço de entrega</h3>
+                                        <hr/>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="control-label">Selecione um endereço:</label>
@@ -280,11 +309,12 @@
                                                     <div class="col-xs-10 col-sm-6 col-md-6">
                                                         <input type="text" id="holderInput"
                                                                name="checkout[paymentMethod][0][data][holder]"
-                                                               class="form-control" >
+                                                               class="form-control"
+                                                               required>
                                                     </div>
                                                 </div>
                                             </div>
-                                            {% if cardSaving %}
+                                            {% if cardSaving and pagarmeActived %}
                                                 <div class="form-group" align="center">
                                                     <div class="row">
                                                         <label class="text-right col-xs-12 col-sm-4">Usar Cartão
@@ -331,33 +361,7 @@
                                                     </div>
                                                 </div>
                                             {% endif %}
-                                            <div style="{{ customer.cpf ? 'display:none;' : '' }}">
-                                                <div class="form-group" align="center">
-                                                    <div class="row">
-                                                        <label class="text-right col-xs-12 col-sm-4">Número do
-                                                            CPF:</label>
-                                                        <div class="col-xs-10 col-sm-6 col-md-6">
-                                                            <input type="text"
-                                                                   name="checkout[paymentMethod][0][data][cpf]"
-                                                                   value="{{ customer.cpf ? customer.cpf.cpf : "" }}"
-                                                                   class="flexy-input-cpf form-control col-xs-10 col-sm-6 col-md-6"
-                                                                   >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group" align="center">
-                                                    <div class="row">
-                                                        <label class="text-right col-xs-12 col-sm-4">Data de
-                                                            Nascimento:</label>
-                                                        <div class="col-xs-10 col-sm-6 col-md-6">
-                                                            <input type="text"
-                                                                   name="checkout[paymentMethod][0][data][birthDate]"
-                                                                   value="{{ customer.dateOfBirth ? customer.dateOfBirth|date('d/m/Y') : "" }}"
-                                                                   class="flexy-input-date form-control" >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+
                                             <div class="form-group" align="center">
                                                 <div class="row">
                                                     <label class="text-right col-xs-12 col-sm-4">Número do
@@ -366,7 +370,7 @@
                                                         <input type="text"
                                                                name="checkout[paymentMethod][0][data][number]"
                                                                id="number" class="flexy-input-creditcard form-control"
-                                                               >
+                                                               required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -378,7 +382,7 @@
                                                         <div class="input-group">
                                                             <select class="form-control" id="expirationMonth"
                                                                     name="checkout[paymentMethod][0][data][expirationMonth]"
-                                                                    >
+                                                            >
                                                                 <option value="">Mês</option>
                                                                 {% for month in 1..12 %}
                                                                     <option value="{{ month }}">{{ month }}</option>
@@ -389,7 +393,7 @@
                                                             {% set maxYear = actualYear + 10 %}
                                                             <select class="form-control" id="expirationYear"
                                                                     name="checkout[paymentMethod][0][data][expirationYear]"
-                                                                    >
+                                                            >
                                                                 <option value="">Ano</option>
                                                                 {% for year in actualYear..maxYear %}
                                                                     <option value="{{ year }}">{{ year }}</option>
@@ -406,7 +410,7 @@
                                                     <div class="col-xs-10 col-sm-6 col-md-6 tooltip-container">
                                                         <input type="text" class="flexy-input-cvv form-control cvv"
                                                                id="cvv" name="checkout[paymentMethod][0][data][cvv]"
-                                                               />
+                                                               required/>
                                                         <div class="cvv-tooltip">Digite o CVV do cartão</div>
                                                     </div>
                                                 </div>
@@ -417,7 +421,7 @@
                                                     <div class="col-xs-10 col-sm-6 col-md-6">
                                                         <select class="form-control"
                                                                 name="checkout[paymentMethod][0][data][installments]"
-                                                                >
+                                                        >
                                                             <option value="">Selecione uma bandeira e um método de
                                                                 envio.
                                                             </option>
@@ -425,21 +429,24 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="form-group" align="center">
-                                                <div class="row">
-                                                    <div class="col-xs-10 col-sm-6 col-md-6">
-                                                        <input type="hidden"
-                                                               name="checkout[paymentMethod][0][data][saveCard]"
-                                                               value="0">
-                                                        <label class="control-label">
-                                                            <input type="checkbox"
+                                            {% if pagarmeActived %}
+                                                <div class="form-group" align="center">
+                                                    <div class="row">
+                                                        <div class="col-xs-10 col-sm-6 col-md-6">
+                                                            <input type="hidden"
                                                                    name="checkout[paymentMethod][0][data][saveCard]"
-                                                                   value="1" id="default_card" class="default_card" checked>
-                                                            Salvar Cartão para futuras compras
-                                                        </label>
+                                                                   value="0" id="default_card" class="default_card">
+
+                                                            <label class="control-label">
+                                                                <input type="checkbox"
+                                                                       name="checkout[paymentMethod][0][data][saveCard]"
+                                                                       value="1" id="default_card" class="default_card">
+                                                                Salvar Cartão para futuras compras
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            {% endif %}
                                         </div>
                                         {% set displayTab = false %}
                                         {% if not activeTab and 'deposit' in paymentMethodActiveKeys %}
@@ -529,7 +536,7 @@
                                              id="boletoafaturar">
                                             <input type="radio" name="checkout[paymentMethod][0][name]"
                                                    value="payment.method.boletoafaturar" style="display: none;"
-                                                   />
+                                            />
                                             <div class="boleto-faturar-rules"></div>
                                         </div>
 
@@ -564,6 +571,7 @@
                         <article class="col-md-3">
                             <div class="block-form block-order-total box-border wow fadeInRight" data-wow-duration="1s">
                                 <h3><i class="fa fa-dollar"></i>Totais</h3>
+                                <hr>
                                 <ul class="list-unstyled">
                                     <li>Subtotal:
                                         <span>R$ {{ cart.itemsTotalWithDiscount|number_format(2, ',', '.') }}</span>
@@ -631,7 +639,7 @@
                                         <hr>
                                     </li>
                                 </ul>
-                                <button type="submit" class="btn btn-light-blue btn-checkout col-md-12"><i
+                                <button type="button" class="btn btn-light-blue btn-checkout col-md-12" id="submitPagar"><i
                                             class="fa fa-check-circle"></i> &nbsp;&nbsp;Finalizar compra
                                 </button>
                             </div>
@@ -736,14 +744,10 @@
                 let shouldDisplayAliquots = false;
 
                 var paymentMethod = $("[name='checkout[paymentMethod][0][name]']:checked").val() || "",
-                    isDeposit = paymentMethod === "payment.method.deposit",
-                    isNegotiable = paymentMethod === "payment.method.negotiable",
-                    isPix = paymentMethod == "payment.method.pix",
                     isApplePay = paymentMethod == "payment.method.digitalwallet.applepay",
                     isPicPay = paymentMethod == "payment.method.digitalwallet.picpay",
                     depositDiscount = 0,
                     negotiableDiscount = 0,
-                    discountPix = 0,
                     discountApplePay = 0,
                     discountPicPay = 0,
                     billingTotalWithAliquots = billingTotal + shippingIpiTotal - paymentDiscount,
@@ -790,6 +794,7 @@
                     let hr = document.createElement("hr");
                     let negrito = document.createElement("b");
                     if(aliquotsTotal > 0) {
+
                         aliquotsValue = aliquotsTotal;
                         negrito.innerHTML = "Total de Alíquotas:";
                         li.append(negrito);
@@ -809,21 +814,6 @@
                     $(".billing-total").html($.number(billingTotal + shippingIpiTotal, 2, ',', '.'));
                 }
 
-                if (isDeposit) {
-                    depositDiscount = (billingTotalWithAliquots - shippingTotal) * Number("{{ (store.paymentMethod.deposit)?store.paymentMethod.deposit.discount/100 : null }}");
-                    paymentDiscount = depositDiscount;
-                }
-
-                if (isNegotiable) {
-                    negotiableDiscount = (billingTotalWithAliquots - shippingTotal) * Number("{{ store.paymentMethod.negotiable.discount / 100 }}");
-                    paymentDiscount = negotiableDiscount;
-                }
-
-                if (isPix) {
-                    discountPix = (billingTotalWithAliquots - shippingTotal) * Number("{{ store.paymentMethod.pix.discount / 100 }}");
-                    paymentDiscount = discountPix;
-                }
-
                 if (isApplePay) {
                     discountApplePay = (billingTotalWithAliquots - shippingTotal) * Number("{{ store.paymentMethod.applepay.discount / 100 }}");
                     paymentDiscount = discountApplePay;
@@ -834,10 +824,6 @@
                     paymentDiscount = discountPicPay;
                 }
 
-                if (!parseFloat(discountPix)) {
-                    $('.discount-pix').hide();
-                }
-
                 if (!parseFloat(discountApplePay)) {
                     $('.discount-applepay').hide();
                 }
@@ -846,25 +832,8 @@
                     $('.discount-picpay').hide();
                 }
 
-                if (depositDiscount > 0 && isDeposit) {
-                    $(".discount-deposit").show();
-                } else {
-                    $(".discount-deposit").hide();
-                }
-
-                if (negotiableDiscount > 0 && isNegotiable) {
-                    $(".discount-negotiable").show();
-                } else {
-                    $(".discount-negotiable").hide();
-                }
-
                 var billingTotalWithAliquotsAndDiscount = billingTotal + aliquotsTotal + shippingIpiTotal - paymentDiscount;
 
-                $(".discount-deposit-total").html($.number(depositDiscount, 2, ',', '.'));
-                $(".discount-deposit-total").attr("data-discount", depositDiscount);
-                $(".discount-negotiable-total").html($.number(negotiableDiscount, 2, ',', '.'));
-                $(".discount-negotiable-total").attr("data-discount", negotiableDiscount);
-                $(".discount-pix-total").html($.number(discountPix, 2, ',', '.'));
                 $(".discount-applepay-total").html($.number(discountApplePay, 2, ',', '.'));
                 $(".discount-picpay-total").html($.number(discountPicPay, 2, ',', '.'));
                 $(".billing-total").html($.number(billingTotalWithAliquotsAndDiscount, 2, ',', '.'));
@@ -1555,6 +1524,9 @@
         }
 
         function loadBoletoRules() {
+            $('.boleto-faturar-rules').empty();
+            $('.boleto-faturar-rules').append('<i class=\"fa fa-spinner fa-spin\"></i> <label><strong>Carregando, aguarde...</strong></label>');
+
             let $boletoRules = $(".boleto-faturar-rules");
 
             let selectedShippingMethods = [];
@@ -1633,22 +1605,25 @@
                     }
 
                     let inputName = "checkout[paymentMethod][0][data][ruleBoleto]";
-                    $('.boleto-faturar-rules').empty();
 
-                    rules.forEach(rule => $('.boleto-faturar-rules').append(`
-                        <div class="radio">
-                            <label class="" style="margin-top: 0 !important">
-                                <input name="${inputName}"
-                                    value="${rule.rule}" data-discount="${rule.pDiscount.replace(',', '.')}"
-                                    type="radio" data-addition="${rule.pAddition.replace(',', '.')}"/>
-                                <span>${rule.label}</span>
-                            </label>
-                        </div>`)
-                    );
+                    setTimeout(() => {
+                        $('.boleto-faturar-rules').empty();
 
-                    $(`input[name="${inputName}"]`).change(function() {
-                        recalculatePrice();
-                    });
+                        rules.forEach(rule => $('.boleto-faturar-rules').append(`
+                            <div class="radio">
+                                <label class="" style="margin-top: 0 !important">
+                                    <input name="${inputName}"
+                                        value="${rule.rule}" data-discount="${rule.pDiscount.replace(',', '.')}"
+                                        type="radio" data-addition="${rule.pAddition.replace(',', '.')}"/>
+                                    <span>${rule.label}</span>
+                                </label>
+                            </div>`)
+                        );
+
+                        $(`input[name="${inputName}"]`).change(function() {
+                            recalculatePrice();
+                        });
+                    }, 1500); 
                 },
                 error: () => $boletoRules.html("Não disponível")
             });
@@ -1691,6 +1666,8 @@
                 taxRate = installments[0]['tax_rate'];
 
             if (installments.length) {
+                $("#paymentGatewayId").val(installments[0]['paymentGatewayId']).trigger("change");
+
                 $.each(installments[0]['no_tax'], function(qty, amount) {
 
                     let discountText = qty == 1 && creditCardDiscountText ? creditCardDiscountText : '';
@@ -1707,6 +1684,7 @@
                     options.push("<option id=" + optionId +" value="+ optionValue +" data-total="+totalWithAliq+" data-installment="+qty+">"+optionText+"</option>\n");
 
                     $(installmentsSelectBox).on("change", function() {
+
                         let creditCardPaymentDiscount = 0,
                             currentCreditCardDiscount;
 
@@ -1732,6 +1710,7 @@
                             $(".discount-creditcard").css("display", "none");
                             $(".billing-total").text($.number(optionTotal, 2, ',', '.'));
                         }
+                        recalculateAliquots(optionTotal)
                     });
                 });
 
@@ -1750,6 +1729,7 @@
 
         let creditCardRegex = /\.creditcard\./;
         if (creditCardRegex.test(brand)) {
+            $("#paymentGatewayId").val(0);
             $.ajax({
                 url: '{{ path('flexy_ftwo_store_checkout_installments_list') }}',
                 method: 'get',
@@ -1876,10 +1856,10 @@
             $(".discount-pix")[isPix ? "show" : "hide"]();
             $(".discount-applepay")[isApplePay ? "show" : "hide"]();
             $(".discount-picpay")[isPicPay ? "show" : "hide"]();
-
-            $(".discount-creditcard")[!isCreditCard ? "hide" : "hide"]();
+            $(".discount-creditcard")[isCreditCard ? "show" : "hide"]();
             $(".boleto-faturar-rules")[!isBoletoAFaturar ? "hide" : "show"]();
-            $(".payment-method-fields")
+            $(".payment-method-fields")[isCreditCard ? "show" : "hide"]();
+          $(".payment-method-fields")
                 [isCreditCard ? "show" : "hide"]()
                 .find(":input")
                 .not("select[name='checkout[subscription_plan_id]'], #savedCardSelect, #default_card")
@@ -2153,12 +2133,18 @@
                 isCreditCard = creditCardRegex.test(paymentMethod),
                 isBoleto = paymentMethod === "payment.method.boleto",
                 isBoletoFaturar = paymentMethod === "payment.method.boletoafaturar",
+                isPix = paymentMethod == "payment.method.pix",
+                isDeposit = paymentMethod === "payment.method.deposit",
+                isNegotiable = paymentMethod === "payment.method.negotiable",
                 discountBoletoRuleRate = 0,
                 additionBoletoRuleRate = 0,
                 paymentAddition = 0,
                 additionBoleto = 0,
                 percentageBoletoRuleRate = true;
 
+            discountPix = 0;
+            depositDiscount = 0;
+            negotiableDiscount = 0;
             paymentDiscount = 0;
 
             if (isBoletoFaturar) {
@@ -2210,6 +2196,21 @@
                 {% endif %}
             });
 
+            if (isPix) {
+                discountPix = (billingTotal) * Number("{{ store.paymentMethod.pix.discount / 100 }}");
+                paymentDiscount = discountPix;
+            }
+
+            if (isDeposit) {
+                depositDiscount = (billingTotal) * Number("{{ (store.paymentMethod.deposit)?store.paymentMethod.deposit.discount/100 : null }}");
+                paymentDiscount = depositDiscount;
+            }
+
+            if (isNegotiable) {
+                negotiableDiscount = (billingTotal) * Number("{{ store.paymentMethod.negotiable.discount / 100 }}");
+                paymentDiscount = negotiableDiscount;
+            }
+
             if (hasAnyShippingDiscount) {
                 shippingDiscount = 0;
 
@@ -2233,6 +2234,7 @@
 
             //show totals
             $(".icms-total").html($.number(icmsTotal, 2, ',', '.'));
+            
             $(".discount-boleto-total").html($.number(discountBoleto, 2, ',', '.'));
             $(".addition-boleto-total").html($.number(additionBoleto, 2, ',', '.'));
             $(".discount-boleto-total").attr("data-discount", discountBoleto);
@@ -2267,6 +2269,29 @@
                 recalculateInstallmentTax(billingTotalWithTaxes);
                 loadInstallments();
             }
+
+            if (!parseFloat(discountPix) && isPix) {
+                $('.discount-pix').hide();
+            }
+
+            if (negotiableDiscount > 0 && isNegotiable) {
+                $(".discount-negotiable").show();
+            } else {
+                $(".discount-negotiable").hide();
+            }
+
+            if (depositDiscount > 0 && isDeposit) {
+                $(".discount-deposit").show();
+            } else {
+                $(".discount-deposit").hide();
+            }
+
+            $(".discount-pix-total").html($.number(discountPix, 2, ',', '.'));
+            $(".discount-pix-total").attr("data-discount", discountPix);
+            $(".discount-deposit-total").html($.number(depositDiscount, 2, ',', '.'));
+            $(".discount-deposit-total").attr("data-discount", depositDiscount);
+            $(".discount-negotiable-total").html($.number(negotiableDiscount, 2, ',', '.'));
+            $(".discount-negotiable-total").attr("data-discount", negotiableDiscount);
 
             $(".aliquot").hide();
             setAliquotVariables(shippingTotal, paymentDiscount, billingTotalWithTaxesWithoutShippingIpiTotal);
@@ -2416,6 +2441,7 @@
             const $tab = $($(this).attr("href")),
                 isCreditCard = $(this).parent().prop('id') == 'tab-credit-card';
                 isDigitalWallet = $(this).parent().prop('id') == 'tab-digital-wallet';
+                isBoletoFaturar = $(this).parent().prop('id') == 'tab-boleto-faturar';
             $("[name='checkout[paymentMethod][0][name]']").prop("checked", false);
             if(!isCreditCard && isAllShippingMethodSelected()) {
                 $tab.find("[name='checkout[paymentMethod][0][name]']:first").prop("checked", "checked").trigger("change");
@@ -2426,7 +2452,9 @@
             }
 
             togglePaymentMethod();
-            recalculatePrice();
+            if(!isBoletoFaturar) {
+                recalculatePrice();
+            }
             calculateTaxSubstitution();
             if(isDigitalWallet) uncheckDigitalWallet();
         });
@@ -2558,6 +2586,8 @@
             let taxRate = installments[0]['tax_rate'];
 
             if (installments.length) {
+                $("#paymentGatewayId").val(installments[0]['paymentGatewayId']).trigger("change");
+
                 $.each(installments[0]['no_tax'], function(qty, amount) {
                     let discountText = qty == 1 && creditCardDiscountText ? creditCardDiscountText : '';
                     let Aliq = aliquotsValue / qty;
@@ -2617,6 +2647,7 @@
 
         let creditCardRegex = /\.creditcard\./;
         if (creditCardRegex.test(brand)) {
+            $("#paymentGatewayId").val(0);
             $.ajax({
                 url: '{{ path('flexy_ftwo_store_checkout_installments_list') }}',
                 method: 'get',
@@ -2644,7 +2675,399 @@
 
 </script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/@mygateway/mygateway-three-ds-sdk-frontend@1.2.6/MyGateway3DS.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    jq360 = jQuery.noConflict( true );
 
+    jq360(function () {
+        carregaDadosTela();
+
+        function carregaDadosTela() {
+
+            if($("#latitude").val() == '' || $("#longitude").val() == '' || $("#accuracy").val() == '') {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            $("#latitude").val(position.coords.latitude);
+                            $("#longitude").val(position.coords.longitude);
+                            $("#accuracy").val(position.coords.accuracy);
+
+                        },
+                        (error) => {}
+                    );
+                }
+            }
+
+            if($("#ipAddress").val() == '') {
+                $.ajax({
+                    url: "https://api.ipify.org/?format=json",
+                    type: 'GET',
+                    success: function (dados) {
+                        $("#ipAddress").val(dados.ip);
+                    },
+                    error: function (error) { }
+                });
+            }
+        }
+
+        function errorAlert(message) {
+            $( ".flexy-black-overlay" ).remove();
+            $("#mensagem-erro").html('');
+
+            var $alert = $(
+                "<div class='alerts container'>" +
+                "   <div class='alert alert-danger' id='alert-error-messagem'>"+message+"<button class='close' data-dismiss='alert'><i class='fa fa-times'></i></button></div>"+
+                "</div>"
+            );
+
+            $("#mensagem-erro").append($alert);
+        }
+
+        function loadingOverlay() {
+            var $overlay = $(
+                "<div class='flexy-black-overlay'> " +
+                "    <div class='flexy-loading'> " +
+                "        <div class='loading-gif'></div> " +
+                "        <p>Processando pagamento, aguarde...</p> " +
+                "    </div> " +
+                "</div>"
+            );
+
+            $("body").append($overlay);
+        }
+
+        $("#paymentGatewayId").change(function(){
+            let brand = $("[name='checkout[paymentMethod][0][name]']:checked").val();
+
+            let creditCardRegex = /\.creditcard\./;
+
+            if($(this).val() == 17 && creditCardRegex.test(brand)) {
+                carregaDadosTela();
+            }
+        });
+
+        $("#submitPagar").click(function(){
+            let brand = $("[name='checkout[paymentMethod][0][name]']:checked").val();
+
+            let creditCardRegex = /\.creditcard\./;
+
+            if($("#paymentGatewayId").val() == 17 && creditCardRegex.test(brand)) {
+
+                loadingOverlay();
+
+                $.ajax({
+                    url : '{{ path('flexy_ftwo_store_mygateway_3ds_initialize') }}',
+                    method : 'GET',
+                    async: true
+                }).done(function(response) {
+                  customValidateRecaptcha()
+                    .finally(function () {
+                        RealizarPagamentoPorCredito(
+                            response.crypt,
+                            response.seed,
+                            response.fingerprintSessionId,
+                            () => {
+                                var data = $("#payment-form").serialize();
+                                $.ajax({
+                                    url: $("#payment-form").attr('action'),
+                                    data: data,
+                                    dataType: 'JSON',
+                                    async: true,
+                                    type: 'POST',
+                                    success: function (result) {
+                                        treatEnrollmentResponse(result);
+                                    },
+                                    error: function (err, resp, text) {
+                                        errorAlert(err.responseJSON.message);
+                                    }
+                                });
+                            }
+                        );
+                    })
+                }).fail(function(err) {
+                    errorAlert("Erro ao configurar o 3DS");
+                });
+            } else {
+
+                if (isPix()) {
+                  mountDeviceFingerprint();
+                }
+
+                $("#payment-form").submit();
+            }
+        });
+
+        function isPix() {
+          let currentPaymentMethod = $("[name='checkout[paymentMethod][0][name]']:checked").val();
+
+          return currentPaymentMethod == "payment.method.pix";
+        }
+
+        async function RealizarPagamentoPorCredito(crypt, seed, fingerprintSessionId, callback) {
+            try {
+                var ccnumValue = $("#number").val();
+                ccnumValue = ccnumValue.replace(/\s/g, '');
+                $("#ccnum").val(ccnumValue);
+
+                const data = {"crypt": crypt, "seed": seed};
+
+                $("#fingerprintSessionId").val(fingerprintSessionId);
+
+                threeDs = new MyGateway3DS("ccnum", validateChallengeCallback, 1, fingerprintSessionId, data);
+                await threeDs.Authorization3ds();
+
+                var code3ds = threeDs.GetThreeDsCode();
+                $('#code3DS').val(code3ds);
+                let payment = await CallPayment(code3ds, callback);
+                return payment;
+            } catch (erro) {
+                errorAlert(erro.message);
+            }
+        }
+
+        async function CallPayment(code3ds, callback) {
+            let payload = getPaymentData(code3ds);
+
+            return await callback();
+        }
+
+        function getPaymentData(code3ds) {
+            mountDeviceFingerprint();
+            return {
+                code3ds: code3ds
+            };
+        }
+
+        function mountDeviceFingerprint() {
+            var httpBrowserColorDepth = screen.colorDepth;
+            $("#httpBrowserColorDepth").val(httpBrowserColorDepth);
+
+            var httpBrowserJavaEnabled = navigator.javaEnabled() ? "y" : "N";
+            $("#httpBrowserJavaEnabled").val(httpBrowserJavaEnabled);
+
+            var httpBrowserJavaScriptEnabled = true;
+            $("#httpBrowserJavaScriptEnabled").val(httpBrowserJavaScriptEnabled);
+
+            var httpBrowserLanguage = navigator.language || navigator.userLanguage;
+            $("#httpBrowserLanguage").val(httpBrowserLanguage);
+
+            var httpBrowserScreenHeight = window.innerHeight;
+            $("#httpBrowserScreenHeight").val(httpBrowserScreenHeight);
+
+            var httpBrowserScreenWidth = window.innerWidth;
+            $("#httpBrowserScreenWidth").val(httpBrowserScreenWidth);
+
+            var httpBrowserTimeDifference = new Date().getTimezoneOffset();
+            $("#httpBrowserTimeDifference").val(httpBrowserTimeDifference);
+
+            var httpAcceptContent = "*/*";
+            $("#httpAcceptContent").val(httpAcceptContent);
+
+            var userAgentBrowserValue = navigator.userAgent;
+            $("#userAgentBrowserValue").val(userAgentBrowserValue);
+
+            $("#timestamp").val(new Date().getTime());
+            $("#referer").val(document.baseURI);
+            $("#userAgent").val(navigator.userAgent);
+            $("#channel").val(detectarPlataforma());
+        }
+
+        function detectarPlataforma() {
+            const ua = navigator.userAgent;
+
+            const isMobileBrowser = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /\bwv\b/.test(ua) || (/iPhone|iPod|iPad/.test(ua) && !/Safari/.test(ua));
+
+            if (isWebView) {
+                return '2'; // Mobile
+            } else if (isMobileBrowser) {
+                return '3'; // MobileWEB
+            } else {
+                return '1'; // WEB
+            }
+        }
+
+        function treatEnrollmentResponse(response) {
+            if (JSON.parse(response.success)) {
+                let objEnrollment = response.data;
+
+                $("#paymentId").val(objEnrollment.paymentId);
+                $("#orderNumber").val(objEnrollment.orderNumber);
+
+                if (objEnrollment.antiFraudData) {
+                    $( ".flexy-black-overlay" ).remove();
+
+                    let antiFraudData = objEnrollment.antiFraudData.value;
+
+                    Swal.fire({
+                        title: "3DS",
+                        text: "O emissor do cartão solicitou um desafio",
+                        icon: "warning",
+                        showCancelButton: true,
+                        allowOutsideClick: false,
+                        confirmButtonText: "Responder"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            threeDs.InitChallenge(antiFraudData.acsUrl, antiFraudData.pareq, antiFraudData.authenticationTransactionId);
+                        } else {
+                            errorAlert("Você não respondeu o desafio, refaça seu pedido.");
+
+                            Swal.fire({
+                                title: "Ops",
+                                text: "Desafio não respondido, seu pedido será cancelado e redirecionaremos  você para o carrinho para realizar uma nova tentativa.",
+                                icon: "warning",
+                                showCancelButton: false,
+                                allowOutsideClick: false,
+                                confirmButtonText: "OK"
+                            }).then((result) => {
+                                let orderNumber = getOrderNumber()
+
+                                $.ajax({
+                                    url: '{{ path('flexy_ftwo_store_mygateway_3ds_no_answered') }}',
+                                    data: {
+                                      orderNumber: orderNumber
+                                    },
+                                    dataType: 'JSON',
+                                    async: true,
+                                    type: 'POST',
+                                    beforeSend: function(data) {
+                                        let $overlay = $(
+                                            "<div class='flexy-black-overlay'> " +
+                                            "    <div class='flexy-loading'> " +
+                                            "        <div class='loading-gif'></div> " +
+                                            "        <p>Redirecionando, aguarde...</p> " +
+                                            "    </div> " +
+                                            "</div>"
+                                        );
+
+                                        $("body").append($overlay);
+                                    }
+                                }).done(function(data){
+                                    let redirectUrl = "{{ path('flexy_ftwo_store_customer_reorder', {'orderNumber':'PARAM'}) }}".replace('PARAM', orderNumber);
+                                    window.location.href = redirectUrl;
+                                });
+                            });
+                        }
+                    });
+                }
+                else {
+                    loadingOverlay();
+                    window.location.href = "{{ path('flexy_ftwo_store_checkout_success', { orderNumber: 'PARAM'}) }}".replace('PARAM', objEnrollment.orderNumber);
+                }
+
+            } else {
+                errorAlert(response.message);
+            }
+        }
+
+        function validateChallengeCallback(jwt, statusChallenge) {
+            loadingOverlay();
+
+            if (statusChallenge == 'Cancelled') {
+                return;
+            }
+
+            var validationData = getValidationData(jwt);
+
+            var settings = {
+                "async": true,
+                "crossDomain": true,
+                "url": '{{ path('flexy_ftwo_store_mygateway_3ds_validate') }}',
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Accept": "*/*"
+                },
+                "processData": false,
+                "data": JSON.stringify(validationData),
+            };
+
+            $.ajax(settings).done(function (response, status) {
+                ValidationResponse(response);
+            }).fail(function (response) {
+                errorAlert(response.responseJSON.message);
+
+                let errorMessage = `<div><p>Não foi possível finalizar a transação. Mais detalhes abaixo:</p>
+                                    <p><strong>${response.responseJSON.message}</strong></p>
+                                    <p>Você será redirecionado para o carrinho e poderá tentar o pagamento novamente.</p></div>`
+
+                Swal.fire({
+                    title: "Ops",
+                    html: errorMessage,
+                    icon: "error",
+                    showCancelButton: false,
+                    allowOutsideClick: false,
+                    confirmButtonText: "Prosseguir"
+                }).then((result) => {
+                   let redirectUrl = "{{ path('flexy_ftwo_store_customer_reorder', {'orderNumber':'PARAM'}) }}".replace('PARAM', getOrderNumber());
+
+                    let $overlay = $(
+                        "<div class='flexy-black-overlay'> " +
+                        "    <div class='flexy-loading'> " +
+                        "        <div class='loading-gif'></div> " +
+                        "        <p>Redirecionando, aguarde...</p> " +
+                        "    </div> " +
+                        "</div>"
+                    );
+
+                    $("body").append($overlay);
+
+                    window.location.href = redirectUrl;
+                });
+            });
+        }
+
+        function ValidationResponse(validationResponse) {
+            var response = validationResponse.paymentAuthorization;
+            if (validationResponse.success) {
+                let orderNumber = $("#orderNumber").val();
+
+                window.location.href = "{{ path('flexy_ftwo_store_checkout_success', { orderNumber: 'PARAM'}) }}".replace('PARAM', orderNumber);
+            } else {
+                errorAlert("Não foi possivel continuar com o pagamento, repita o procedimento por favor");
+            }
+        }
+
+        function getValidationData(jwt) {
+            var validationData;
+            validationData = {
+                code3ds: threeDs.GetThreeDsCode(),
+                validateToken: jwt,
+                paymentId: $("#paymentId").val(),
+                orderNumber: $("#orderNumber").val()
+            };
+            return validationData;
+        }
+
+        function getOrderNumber() {
+          return $("#orderNumber").val();
+        }
+
+        function customValidateRecaptcha (){
+            return new Promise(async (resolve, reject) => {
+                try {
+
+                    {% if not store.googleReCaptcha.isActive %}
+                        return resolve();
+                    {% endif %}
+
+                    const siteKey = "{{ store.googleReCaptchaData.siteKey }}";
+                    const action = "{{ store.googleReCaptchaData.currentRoute }}";
+
+                    const token = await grecaptcha.execute(siteKey, { action });
+
+                    $('#recaptchaTokenV3').val(token);
+
+                    return resolve(token);
+                } catch (e) {
+                    return reject(e);
+                }
+            })
+        }
+    });
+</script>
 {# Função para exibir a janela modal de processamento do pagamento #}
 <script>
     $(document).ready(function () {
@@ -2664,7 +3087,6 @@
         });
     });
 </script>
-
 <style>
 /* Estilo do balão de dica */
 .cvv-tooltip {
