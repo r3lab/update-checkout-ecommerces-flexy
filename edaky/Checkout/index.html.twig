@@ -158,6 +158,7 @@
                                 {% include 'FlexyFtwoStoreBundle:Checkout:orderAttributeValues.html.twig' %}
                                 <div class="payment-box">
                                     <h3><i class="fa fa-credit-card"></i> Forma de pagamento</h3>
+                                    <hr>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs" role="tablist">
                                         {% set paymentMethodActive = false %}
@@ -619,8 +620,8 @@
                                                     class="discount-picpay-total">{{ 0|number_format(2, ',', '.') }}</span></span>
                                     </li>
                                     <li id="installments-tax" hidden="hidden"><label class="number-of-installments">Juros
-                                            para parcelamento em X vezes:</label><span>R$&nbsp;<span
-                                                    class="installments-tax-total">{{ 0|number_format(2, ',', '.') }}</span></span>
+                                            para parcelamento em X vezes:</label><div class="number-of-installments-total">R$&nbsp;<span
+                                                    class="installments-tax-total">{{ 0|number_format(2, ',', '.') }}</span></div>
                                     </li>
                                     <li>
                                         <hr>
@@ -3116,6 +3117,15 @@
 
 .tooltip-container input:focus + .cvv-tooltip {
     display: block;
+}
+/* Ajustes de layout - Exibição de juros do parcelamento */
+label.number-of-installments {
+    font-size: 14px;
+}
+.number-of-installments-total{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 </style>
 {% endblock %}

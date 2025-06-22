@@ -45,8 +45,12 @@
     <section>
         <div id="mensagem-erro"></div>
         <div class="second-page-container">
-            <div class="container">
-                {% include 'FlexyFtwoStoreBundle:Include:breadcrumbs.html.twig' with {path : [{'title' : 'Checkout'}]} %}
+            <div class="container checkout-container">
+                
+                <div class="checkout-title">
+                 	<h1>Checkout</h1> 
+                </div>
+                            
                 <form action="{{ path("flexy_ftwo_store_checkout_finish") }}" method="post"
                       enctype="multipart/form-data" id="payment-form">
 

@@ -98,7 +98,6 @@
                                 <div class="row address-box">
                                     <div class="col-md-12">
                                         <h3><i class="fa fa-truck"></i> Endereço de entrega</h3>
-                                        <hr/>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="control-label">Selecione um endereço:</label>
@@ -571,7 +570,6 @@
                         <article class="col-md-3">
                             <div class="block-form block-order-total box-border wow fadeInRight" data-wow-duration="1s">
                                 <h3><i class="fa fa-dollar"></i>Totais</h3>
-                                <hr>
                                 <ul class="list-unstyled">
                                     <li>Subtotal:
                                         <span>R$ {{ cart.itemsTotalWithDiscount|number_format(2, ',', '.') }}</span>
@@ -619,8 +617,8 @@
                                                     class="discount-picpay-total">{{ 0|number_format(2, ',', '.') }}</span></span>
                                     </li>
                                     <li id="installments-tax" hidden="hidden"><label class="number-of-installments">Juros
-                                            para parcelamento em X vezes:</label><span>R$&nbsp;<span
-                                                    class="installments-tax-total">{{ 0|number_format(2, ',', '.') }}</span></span>
+                                            para parcelamento em X vezes:</label><div class="number-of-installments-total">R$&nbsp;<span
+                                                    class="installments-tax-total">{{ 0|number_format(2, ',', '.') }}</span></div>
                                     </li>
                                     <li>
                                         <hr>
@@ -3068,25 +3066,6 @@
         }
     });
 </script>
-{# Função para exibir a janela modal de processamento do pagamento #}
-<script>
-    $(document).ready(function () {
-        $("form").on("submit", function () {
-            // Evita múltiplos overlays
-            if ($(".flexy-black-overlay").length === 0) {
-                var overlay = $(
-                    "<div class='flexy-black-overlay'>" +
-                    "    <div class='flexy-loading'>" +
-                    "        <div class='loading-gif'></div>" +
-                    "        <p>Processando pagamento, aguarde...</p>" +
-                    "    </div>" +
-                    "</div>"
-                );
-                $("body").append(overlay);
-            }
-        });
-    });
-</script>
 <style>
 /* Estilo do balão de dica */
 .cvv-tooltip {
@@ -3116,6 +3095,16 @@
 
 .tooltip-container input:focus + .cvv-tooltip {
     display: block;
+}
+/* Ajustes de layout - Exibição de juros do parcelamento */
+label.number-of-installments {
+    font-size: 18px;
+    line-height: 25px;
+}
+.number-of-installments-total{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 </style>
 {% endblock %}
